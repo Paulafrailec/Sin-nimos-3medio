@@ -1,0 +1,171 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Quiz de sinónimos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700&display=swap">
+<style>
+/* Layout: una pregunta por pantalla, puntos de avance arriba, alternativas A-D como botones grandes, retroalimentación inmediata */
+:root{
+  --bg:#eef2f7; --surface:#ffffff; --ink:#17233b; --muted:#53607a; --line:#cdd7e6;
+  --accent:#2858d8; --accent-bg:#e2eaff; --accent-fg:#173a9c;
+  --ok:#1d7a4a; --ok-bg:#dff3e8; --bad:#b3261e; --bad-bg:#fde7e4; --focus:#2858d8;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1525; --surface:#17213a; --ink:#e8edf8; --muted:#9ba9c6; --line:#2b3a5c;
+    --accent:#7da3ff; --accent-bg:#1c2c5c; --accent-fg:#c4d4ff;
+    --ok:#6fdca0; --ok-bg:#16382a; --bad:#ff9d94; --bad-bg:#4a1f1b; --focus:#9db9ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1525; --surface:#17213a; --ink:#e8edf8; --muted:#9ba9c6; --line:#2b3a5c;
+  --accent:#7da3ff; --accent-bg:#1c2c5c; --accent-fg:#c4d4ff;
+  --ok:#6fdca0; --ok-bg:#16382a; --bad:#ff9d94; --bad-bg:#4a1f1b; --focus:#9db9ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:17px; line-height:1.45;
+  padding-block:24px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--font-display);font-size:clamp(1.6rem,5vw,2.2rem);line-height:1.1;margin:0;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.score{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 14px;font-variant-numeric:tabular-nums}
+.score b{font-family:var(--font-display);font-size:1.3rem}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{width:26px;height:8px;border-radius:99px;background:var(--line)}
+.dot.now{background:var(--accent)}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.meta{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.prompt{font-family:var(--font-display);font-size:clamp(1.25rem,4vw,1.6rem);line-height:1.25;margin:0;text-wrap:balance}
+.prompt mark{background:var(--accent-bg);color:var(--accent-fg);padding:0 .3em;border-radius:6px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt .l{flex:none;width:2rem;height:2rem;border-radius:8px;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center;font-weight:700}
+.opt.ok{background:var(--ok-bg);border-color:var(--ok)}
+.opt.ok .l{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.opt.bad{background:var(--bad-bg);border-color:var(--bad)}
+.opt.bad .l{background:var(--bad);border-color:var(--bad);color:var(--bg)}
+.opt:disabled{cursor:default}
+.fb{margin:0;padding:10px 14px;border-radius:10px;font-weight:700}
+.fb.ok{background:var(--ok-bg);color:var(--ok)}
+.fb.bad{background:var(--bad-bg);color:var(--bad)}
+.btn{align-self:flex-start;background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer}
+.btn:hover{opacity:.88}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.end{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px}
+.end h2{margin:0;font-family:var(--font-display);font-size:1.5rem}
+.big{font-family:var(--font-display);font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:1.2rem;color:var(--muted);font-family:var(--font-body)}
+.rev{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rev li{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px;border-radius:10px;font-size:.95rem}
+.rev li.ok{background:var(--ok-bg);color:var(--ok)}
+.rev li.bad{background:var(--bad-bg);color:var(--bad)}
+.rev b{color:var(--ink)}
+[hidden]{display:none!important}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Quiz de sinónimos</h1>
+    <p class="sub">Elige el sinónimo correcto de cada palabra. Cada respuesta vale 1 punto.</p>
+  </div>
+
+  <div id="game" class="wrap" style="padding:0">
+    <div class="top">
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <div class="score" aria-live="polite">Puntaje: <b id="pts">0</b> / 9</div>
+    </div>
+    <section class="q">
+      <div class="meta" id="meta"></div>
+      <p class="prompt" id="prompt"></p>
+      <div class="opts" id="opts"></div>
+      <p class="fb" id="fb" hidden role="status"></p>
+      <button class="btn" id="next" type="button" hidden>Siguiente</button>
+    </section>
+  </div>
+
+  <section class="end" id="end" hidden>
+    <h2 id="endTitle"></h2>
+    <div class="big"><span id="endPts"></span> <small>de 9 puntos</small></div>
+    <p id="endMsg" style="margin:0"></p>
+    <ul class="rev" id="rev"></ul>
+    <button class="btn" id="again" type="button">Jugar de nuevo</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  var Q=[
+    {w:"INMUNDO",o:["Limpio.","Impecable.","Pulcro.","Asqueroso."],c:3},
+    {w:"ENCLENQUE",o:["Raquítico.","Robusto.","Fornido.","Corpulento."],c:0},
+    {w:"REMOLIENDA",o:["Velorio.","Silencio.","Parranda.","Descanso."],c:2},
+    {w:"ESCUDRIÑAR",o:["Ignorar.","Indagar.","Descuidar.","Olvidar."],c:1},
+    {w:"COMEDIDO",o:["Grosero.","Insolente.","Atrevido.","Cortés."],c:3},
+    {w:"ESTRAFALARIO",o:["Sencillo.","Discreto.","Extravagante.","Convencional."],c:2},
+    {w:"ENCOPETADO",o:["Presuntuoso.","Humilde.","Modesto.","Descomplicado."],c:0},
+    {w:"ANTEDILUVIANO",o:["Moderno.","Arcaico.","Novedoso.","Actual."],c:1},
+    {w:"AMARGURA",o:["Pesar.","Alegría.","Dicha.","Júbilo."],c:0}
+  ];
+  var L=["A","B","C","D"];
+  var $=function(i){return document.getElementById(i)};
+  var i=0, pts=0, res=[];
+
+  function dots(){
+    $('dots').innerHTML=Q.map(function(_,k){
+      var c=k<res.length?(res[k].ok?'ok':'bad'):(k===i?'now':'');
+      return '<span class="dot '+c+'"></span>';
+    }).join('');
+  }
+  function show(){
+    var q=Q[i];
+    $('meta').textContent='Pregunta '+(i+1)+' de '+Q.length+' · 1 punto';
+    $('prompt').innerHTML='¿Cuál es un sinónimo correcto de la palabra <mark>'+q.w+'</mark>?';
+    $('opts').innerHTML='';
+    q.o.forEach(function(t,k){
+      var b=document.createElement('button'); b.type='button'; b.className='opt';
+      b.innerHTML='<span class="l">'+L[k]+'</span><span>'+t+'</span>';
+      b.addEventListener('click',function(){answer(k)});
+      $('opts').appendChild(b);
+    });
+    $('fb').hidden=true; $('next').hidden=true; dots();
+  }
+  function answer(k){
+    var q=Q[i], ok=k===q.c, btns=$('opts').children;
+    for(var n=0;n<btns.length;n++){btns[n].disabled=true;}
+    btns[q.c].classList.add('ok'); if(!ok)btns[k].classList.add('bad');
+    if(ok)pts++;
+    res.push({ok:ok,w:q.w,mine:q.o[k],right:q.o[q.c]});
+    $('pts').textContent=pts;
+    $('fb').className='fb '+(ok?'ok':'bad');
+    $('fb').textContent=ok?'¡Correcto!':'Casi. La respuesta correcta es '+L[q.c]+') '+q.o[q.c];
+    $('fb').hidden=false;
+    $('next').textContent=i===Q.length-1?'Ver resultado':'Siguiente';
+    $('next').hidden=false; $('next').focus(); dots();
+  }
+  function finish(){
+    $('game').hidden=true; $('end').hidden=false;
+    $('endPts').textContent=pts;
+    $('endTitle').textContent=pts===9?'¡Puntaje perfecto!':pts>=7?'¡Muy bien!':pts>=5?'Vas bien, repasa un poco':'Sigue practicando';
+    $('endMsg').textContent=pts===9?'Respondiste todas las preguntas sin errores.':'Revisa abajo las respuestas y vuelve a intentarlo.';
+    $('rev').innerHTML=res.map(function(r){
+      return '<li class="'+(r.ok?'ok':'bad')+'"><b>'+r.w+'</b> '+(r.ok?'= '+r.right:'· elegiste '+r.mine+' · correcta: '+r.right)+'</li>';
+    }).join('');
+  }
+  function restart(){i=0;pts=0;res=[];$('pts').textContent=0;$('end').hidden=true;$('game').hidden=false;show()}
+  $('next').addEventListener('click',function(){if(i===Q.length-1){finish()}else{i++;show()}});
+  $('again').addEventListener('click',restart);
+  show();
+})();
+</script>
+
+</body></html>
